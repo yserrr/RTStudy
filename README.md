@@ -1,2 +1,2 @@
 # RTStudy
-simple ray tracing study
+simple study
