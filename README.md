@@ -1,2 +1,2 @@
-# RTStudy
+# Study
 simple study
