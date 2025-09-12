@@ -5,7 +5,8 @@
 #include <ctime>
 #include <filesystem>
 #include <algorithm>
-#include "../source/Ray.hpp"
+#include <geometry.h>
+
 
 glm::vec3 background(const Ray &ray)
 {

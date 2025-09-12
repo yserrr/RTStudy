@@ -5,9 +5,9 @@
 #include <ctime>
 #include <filesystem>
 #include <algorithm>
-#include "../source/Ray.hpp"
+#include <geometry.h>
 
-glm::vec3 background(const Ray &ray)
+glm::vec3 background(const Ray& ray)
 {
   glm::vec3 sky = (1 - ray.dir.y) * glm::vec3(1, 1, 1) + (ray.dir.y) * glm::vec3(0.5, 0.7, 1.0);
   return sky;
@@ -52,8 +52,12 @@ int main()
   glm::vec3 y = glm::vec3(0, viewportHeight, 0);
   glm::vec3 start = center + depth + (y / 2.0f) - (x / 2.0f);
 
-  glm::vec3 sphereCenter = glm::vec3(0, 0, -1);
-  float radius = 0.25;
+  Sphere sphere2(glm::vec3(0.0, -100.25, -1.0), 100);
+  Sphere sphere1(glm::vec3(0.0, 0.0, -1.0), 0.25);
+
+  std::vector<Hittable*> world;
+  world.push_back(&sphere1);
+  world.push_back(&sphere2);
 
   (out) << "P3\n" << width << ' ' << height << "\n255\n";
   for (int i = 0; i < height; i++)
@@ -66,16 +70,21 @@ int main()
 
       direction = normalize(direction);
       Ray ray(center, direction);
+      HitRecord record;
+      glm::vec3 color = glm::vec3(0, 0, 0);
+      Interval interval;
 
-      glm::vec3 color = background(ray);
-      if (hitSphere(ray, sphereCenter, radius))
+      color = background(ray);
+      for (auto sphere : world)
       {
-        color = glm::vec3(1, 0, 0);
+        if (sphere->isHit(ray,interval, record))
+        {
+          color = record.normal;
+        }
       }
-
       out << int(255 * std::clamp(color.x, 0.0f, 1.0f)) << ' '
-      << int(255 * std::clamp(color.y, 0.0f, 1.0f)) << ' '
-      << int(255 * std::clamp(color.z, 0.0f, 1.0f)) << std::endl;
+          << int(255 * std::clamp(color.y, 0.0f, 1.0f)) << ' '
+          << int(255 * std::clamp(color.z, 0.0f, 1.0f)) << std::endl;
     }
   }
 }
