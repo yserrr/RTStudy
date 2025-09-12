@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <ctime>
 #include <filesystem>
+#include <algorithm>
 #include "../source/Ray.hpp"
 
 glm::vec3 background(const Ray &ray)
@@ -25,7 +26,7 @@ bool hitSphere(Ray ray, glm::vec3 center, float radius)
 
 int main()
 {
-  std::string outputDir = "outputs";
+  std::string outputDir = "frameBuffer";
   std::filesystem::create_directories(outputDir);
   time_t now = time(nullptr);
   char time_buffer[100];
@@ -38,46 +39,43 @@ int main()
     throw std::runtime_error("Could not open file " + filename);
   }
 
-  int height = 256;
   int width = 256;
-  //view port MODEL
+  int height = 256;
 
   float viewportWidth = 1;
   float viewportHeight = 1;
-  float focalLength = 3.0;
+  float focalLength = 1.0;
 
   glm::vec3 center = glm::vec3(0, 0, 0);
-  glm::vec3 x = glm::vec3(viewportWidth, 0, 0);
-  glm::vec3 y = glm::vec3(0, -viewportHeight, 0);
-
   glm::vec3 depth = glm::vec3(0.0f, 0.0f, -focalLength);
-  glm::vec3 start = center + depth - (x / 2.0f) - (y / 2.0f);
+  glm::vec3 x = glm::vec3(viewportWidth, 0, 0);
+  glm::vec3 y = glm::vec3(0, viewportHeight, 0);
+  glm::vec3 start = center + depth + (y / 2.0f) - (x / 2.0f);
 
   glm::vec3 sphereCenter = glm::vec3(0, 0, -1);
-  float radius = 0.5;
+  float radius = 0.25;
 
   (out) << "P3\n" << width << ' ' << height << "\n255\n";
   for (int i = 0; i < height; i++)
   {
     for (int j = 0; j < width; j++)
     {
-      glm::vec3 color(0, 0, 0);
       float u = float(j) / (width - 1);
       float v = float(i) / (height - 1);
-      glm::vec3 pixel = start + u + v;
-      glm::vec3 direction = pixel - center;
+      glm::vec3 direction = start + (u * x) - (v * y) - center;
 
       direction = normalize(direction);
       Ray ray(center, direction);
 
-      color = background(ray);
+      glm::vec3 color = background(ray);
       if (hitSphere(ray, sphereCenter, radius))
       {
         color = glm::vec3(1, 0, 0);
       }
-      out << int(255 * color.x) << ' '
-      << int(255 * color.y) << ' '
-      << int(255 * color.z) << std::endl;
+
+      out << int(255 * std::clamp(color.x, 0.0f, 1.0f)) << ' '
+      << int(255 * std::clamp(color.y, 0.0f, 1.0f)) << ' '
+      << int(255 * std::clamp(color.z, 0.0f, 1.0f)) << std::endl;
     }
   }
 }
